@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  //----------- GENERAL -----------
+  id             String          @id @default(cuid())
+  avatar         String?
+  name           String
+  lastName       String
+  nickName       String          @unique
+  email          String          @unique
+  emailVerified  DateTime?
+  password       String
+  //----------- MANGA -----------
+  likesManga     MangaLike[]
+  seeLaterManga  MangaSeeLater[]
+  favoritesManga MangaFavorite[]
+
+  accounts      Account[]
+  sessions      Session[]
+  // Optional for WebAuthn support
+  Authenticator Authenticator[]
+  ratings       RatingManga[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// Optional for WebAuthn support
+model Authenticator {
+  id                   String  @id @default(cuid())
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Manga {
+  id             Int             @id @unique @default(autoincrement())
+  path           String          @unique
+  cap            Int             @default(0)
+  title          String          @unique
+  description    String
+  statusId       Int
+  typeId         Int
+  authorId       Int
+  scan           Int
+  banner         String?
+  views          Int             @default(0)
+  dayViews       Int             @default(0)
+  weekViews      Int             @default(0)
+  monthViews     Int             @default(0)
+  likes          MangaLike[]
+  likesCount     Int             @default(0)
+  favorites      MangaFavorite[]
+  favoritesCount Int             @default(0)
+  seeLater       MangaSeeLater[]
+  seeLaterCount  Int             @default(0)
+  ratings        RatingManga[]
+  releaseDate    DateTime        @default(now())
+  updateLast     DateTime        @updatedAt
+  updateNext     DateTime?
+
+  // Relaciones (asumiendo que existen las tablas relacionadas)
+  statusManga StatusManga  @relation(fields: [statusId], references: [id])
+  typeManga   TypeManga    @relation(fields: [typeId], references: [id])
+  authorManga AuthorManga  @relation(fields: [authorId], references: [id])
+  scanManga   ScanManga    @relation(fields: [scan], references: [id])
+  genres      GenreManga[]
+}
+
+model StatusManga {
+  id     Int     @id @unique @default(autoincrement())
+  name   String  @unique
+  mangas Manga[]
+}
+
+model TypeManga {
+  id     Int     @id @unique @default(autoincrement())
+  name   String  @unique
+  mangas Manga[]
+}
+
+model AuthorManga {
+  id     Int     @id @unique @default(autoincrement())
+  name   String  @unique
+  mangas Manga[]
+}
+
+model ScanManga {
+  id     Int     @id @unique @default(autoincrement())
+  name   String  @unique
+  mangas Manga[]
+}
+
+model Genre {
+  id     Int          @id @default(autoincrement())
+  name   String       @unique
+  mangas GenreManga[]
+}
+
+model GenreManga {
+  manga   Manga @relation(fields: [mangaId], references: [id])
+  mangaId Int
+  genre   Genre @relation(fields: [genreId], references: [id])
+  genreId Int
+
+  @@id([mangaId, genreId])
+}
+
+model RatingManga {
+  id      Int    @id @default(autoincrement())
+  userId  String
+  mangaId Int
+  score   Int    @default(0)
+  user    User   @relation(fields: [userId], references: [id])
+  manga   Manga  @relation(fields: [mangaId], references: [id])
+
+  @@unique([userId, mangaId])
+}
+
+model MangaLike {
+  id      Int    @id @default(autoincrement())
+  userId  String
+  mangaId Int
+  user    User   @relation(fields: [userId], references: [id])
+  manga   Manga  @relation(fields: [mangaId], references: [id])
+
+  @@unique([userId, mangaId])
+}
+
+model MangaSeeLater {
+  id      Int    @id @default(autoincrement())
+  userId  String
+  mangaId Int
+  user    User   @relation(fields: [userId], references: [id])
+  manga   Manga  @relation(fields: [mangaId], references: [id])
+
+  @@unique([userId, mangaId])
+}
+
+model MangaFavorite {
+  id      Int    @id @default(autoincrement())
+  userId  String
+  mangaId Int
+  user    User   @relation(fields: [userId], references: [id])
+  manga   Manga  @relation(fields: [mangaId], references: [id])
+
+  @@unique([userId, mangaId])
+}
+
+// model Anime {
+//   id           Int             @id @unique @default(autoincrement())
+//   title        String          @unique
+//   description  String
+//   episodes     Int             @default(0)
+//   pathEpisodes String
+//   statusR      StatusAnime     @relation(fields: [statusId], references: [id])
+//   statusId     Int
+//   typeR        TypeAnime       @relation(fields: [typeId], references: [id])
+//   typeId       Int
+//   studio       Studio          @relation(fields: [studioId], references: [id])
+//   studioId     Int
+//   genres       GenresOnAnime[]
+//   banner       String
+//   views        Int             @default(0)
+//   dayViews     Int             @default(0)
+//   weekViews    Int             @default(0)
+//   monthViews   Int             @default(0)
+//   likes        Int             @default(0)
+//   favorite     Int //convertir en model
+//   seeLater     Int             @default(0)
+//   rating       Int             @default(0)
+//   ranking      Int //convertir en model
+//   releaseDate  DateTime        @default(now())
+//   updateLast   DateTime
+//   updateNext   DateTime
+// }
+//----------------------------------------------------------------\
+// WEB SCRAPING
+//----------------------------------------------------------------
+model MangaScraping {
+  id                     Int    @id @unique @default(autoincrement())
+  name                   String @unique
+  domain                 String @unique
+  SelectorName           String
+  SelectorDescription    String
+  SelectorStatus         String
+  SelectorType           String
+  SelectorAuthor         String
+  SelectorScan           String
+  SelectorGenres         String
+  SelectorBanner         String
+  SelectorNumberChapters String
+  SelectorImageChapter   String
+}
