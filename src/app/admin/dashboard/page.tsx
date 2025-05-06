@@ -23,6 +23,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
+interface MangaSite {
+  value: string;
+  label: string;
+}
 
 const frameworks = [
   {
@@ -47,7 +51,7 @@ const frameworks = [
   },
 ]
 const Dashboard = () => {
-  const [mangaSite, setMangaSite] = useState([]);
+  const [mangaSite, setMangaSite] = useState<MangaSite[]>([]);
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
   const { data: session, status } = useSession();
