@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
 export async function POST(){
     // Implement POST request here
     //Agregar un nuevo elemento a una base de datos, como un nuevo usuario, producto o artículo.
@@ -44,6 +45,6 @@ export async function HEAD(){
 export async function GET(){
     // Implement GET request here
     //Obtener una lista de elementos de una base de datos, como productos, usuarios o artículos
-    const MangaScraping = prisma.mangaScraping.findMany(); 
-    return MangaScraping;
+    const data = await prisma.mangaScraping.findMany();
+    return NextResponse.json(data);
     }

@@ -24,8 +24,19 @@ import {
 } from "@/components/ui/popover"
 
 interface MangaSite {
-  value: string;
-  label: string;
+  id: number;
+  name: string;
+  domain: string;
+  SelectorName: string;
+  SelectorDescription: string;
+  SelectorStatus: string;
+  SelectorType: string;
+  SelectorAuthor: string;
+  SelectorScan: string;
+  SelectorGenres: string;
+  SelectorBanner: string;
+  SelectorNumberChapters: string;
+  SelectorImageChapter: string;
 }
 
 const frameworks = [
@@ -54,14 +65,24 @@ const Dashboard = () => {
   const [mangaSite, setMangaSite] = useState<MangaSite[]>([]);
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
+  const [isLoading, setIsLoading] = useState(true);
   const { data: session, status } = useSession();
+
   useEffect(() => {
+    setIsLoading(true);
     fetch('/api/scraping/mangascraping')
       .then(response => response.json())
-      .then(data => setMangaSite(data));
+      .then(data => {
+        setMangaSite(data);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching manga sites:', error);
+        setIsLoading(false);
+      });
   }, []);
 
-  if (status === "loading") {
+  if (status === "loading" || isLoading) {
     return <p>Loading...</p>;
   }
 
@@ -83,21 +104,21 @@ const Dashboard = () => {
                   className="w-[200px] justify-between"
                 >
                   {value
-                    ? frameworks.find((framework) => framework.value === value)?.label
-                    : "Select framework..."}
+                    ? mangaSite.find((site) => site.name === value)?.name
+                    : "Seleccionar sitio..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[200px] p-0">
                 <Command>
-                  <CommandInput placeholder="Search framework..." />
+                  <CommandInput placeholder="Buscar sitio..." />
                   <CommandList>
-                    <CommandEmpty>No framework found.</CommandEmpty>
+                    <CommandEmpty>No se encontró ningún sitio.</CommandEmpty>
                     <CommandGroup>
-                      {mangaSite.map((mangaSite) => (
+                      {mangaSite.map((site) => (
                         <CommandItem
-                          key={mangaSite.value}
-                          value={mangaSite.value}
+                          key={site.id}
+                          value={site.name}
                           onSelect={(currentValue) => {
                             setValue(currentValue === value ? "" : currentValue)
                             setOpen(false)
@@ -106,10 +127,10 @@ const Dashboard = () => {
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              value === mangaSite.value ? "opacity-100" : "opacity-0"
+                              value === site.name ? "opacity-100" : "opacity-0"
                             )}
                           />
-                          {mangaSite.label}
+                          {site.name}
                         </CommandItem>
                       ))}
                     </CommandGroup>
