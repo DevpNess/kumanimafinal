@@ -22,6 +22,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import Menu from './components/Menu';
+import MangaBusqueda from './components/MangaBusqueda';
+import MangaEdicion from './components/MangaEdicion';
+import MangaAgregar from './components/MangaAgregar';
+import MangaAgregarCapitulo from './components/MangaAgregarCapitulo';
+import MangaActualizar from './components/MangaActualizar';
+import MangaValidar from './components/MangaValidar';
+import AnimeBusqueda from './components/AnimeBusqueda';
+import AnimeEdicion from './components/AnimeEdicion';
+import AnimeAgregar from './components/AnimeAgregar';
+import AnimeAgregarCapitulo from './components/AnimeAgregarCapitulo';
+import AnimeActualizar from './components/AnimeActualizar';
+import AnimeValidar from './components/AnimeValidar';
 
 interface MangaSite {
   id: number;
@@ -61,7 +74,24 @@ const frameworks = [
     label: "Astro",
   },
 ]
+
+const componentMap = (mangaSite: MangaSite[] = []) => ({
+  'manga-busqueda': <MangaBusqueda sitios={mangaSite || []} />,
+  'manga-edicion': <MangaEdicion sitios={mangaSite || []} />,
+  'manga-agregar': <MangaAgregar sitios={mangaSite || []} />,
+  'manga-agregar-capitulo': <MangaAgregarCapitulo sitios={mangaSite || []} />,
+  'manga-actualizar': <MangaActualizar sitios={mangaSite || []} />,
+  'manga-validar': <MangaValidar sitios={mangaSite || []} />,
+  'anime-busqueda': <AnimeBusqueda sitios={mangaSite || []} />,
+  'anime-edicion': <AnimeEdicion sitios={mangaSite || []} />,
+  'anime-agregar': <AnimeAgregar sitios={mangaSite || []} />,
+  'anime-agregar-capitulo': <AnimeAgregarCapitulo sitios={mangaSite || []} />,
+  'anime-actualizar': <AnimeActualizar sitios={mangaSite || []} />,
+  'anime-validar': <AnimeValidar sitios={mangaSite || []} />,
+} as Record<string, React.ReactNode>);
+
 const Dashboard = () => {
+  const [selected, setSelected] = React.useState('manga-busqueda');
   const [mangaSite, setMangaSite] = useState<MangaSite[]>([]);
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
@@ -87,72 +117,12 @@ const Dashboard = () => {
   }
 
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      className="h-[100%] w-[100%] rounded-lg border"
-    >
-      <ResizablePanel defaultSize={30} minSize={30} maxSize={50}>
-        <div className="flex h-full items-center justify-center p-6">
-          <span className="font-semibold">
-
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="w-[200px] justify-between"
-                >
-                  {value
-                    ? mangaSite.find((site) => site.name === value)?.name
-                    : "Seleccionar sitio..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandInput placeholder="Buscar sitio..." />
-                  <CommandList>
-                    <CommandEmpty>No se encontró ningún sitio.</CommandEmpty>
-                    <CommandGroup>
-                      {mangaSite.map((site) => (
-                        <CommandItem
-                          key={site.id}
-                          value={site.name}
-                          onSelect={(currentValue) => {
-                            setValue(currentValue === value ? "" : currentValue)
-                            setOpen(false)
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              value === site.name ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {site.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </span>
-
-        </div>
-      </ResizablePanel>
-      <ResizableHandle />
-      <ResizablePanel defaultSize={70} minSize={50} maxSize={70}>
-        <div className="flex h-full items-center justify-center p-6">
-          <span className="font-semibold">
-
-
-          </span>
-
-        </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
-  )
+    <div className="flex h-screen min-h-screen w-full bg-[#18181b]">
+      <Menu selected={selected} onSelect={setSelected} />
+      <div className="flex-1 p-6 overflow-auto m-[10px] rounded-xl shadow-md bg-[#09090b]">
+        {componentMap(mangaSite)[selected]}
+      </div>
+    </div>
+  );
 };
 export default Dashboard;
