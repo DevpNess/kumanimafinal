@@ -17,7 +17,7 @@ export default function Home() {
   const manga = {
     name:'Spy For Family',
     pathSerie:"/spy-for-family/",
-    pathImage:"/spy-for-family/spy-for-family.webp",
+    pathImage:"/comics/spy-for-family/spy-for-family.webp",
     author:"Eros",
     primaryChapter:{
         chapter:'1',

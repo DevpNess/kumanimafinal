@@ -57,7 +57,7 @@ export default function CardSerie(props:CardSerieProps) {
             
                 <figure className="article UpdatedTitle-module_title block" data-glow>
                     <a href="" className='imagenSerieTitulo'>
-                        <img src="/comics/spy-for-family/spy-for-family.webp" alt="" style={{borderRadius:'5px'}}/>
+                        <img src={manga.pathImage} alt="" style={{borderRadius:'5px'}}/>
                         <div className="descripccionSerie">
                             <p className="descripccionSerieTitulo">{manga.name}</p>
                             <p className="descripccionSerieAutor">

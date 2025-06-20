@@ -28,7 +28,7 @@ export default function MainNav() {
                 <Link href="/" className="mr-6 flex items-center space-x-2">
                     <Image
                         src="/media/logo_letras_cabeza.svg"
-                        width={150}
+                        width={190}
                         height={150}
                         alt="Picture of the author"
                     />
