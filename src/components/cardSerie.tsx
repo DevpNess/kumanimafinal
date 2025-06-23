@@ -14,13 +14,11 @@ function TimeDifference({pastDate}:TimeType) {
   const seconds = Math.floor(timeDiffInMs / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours   
- / 24);
+  const days = Math.floor(hours / 24);
 
   let timeAgo;
   if (days > 0) {
-    timeAgo = `${days}   
- día${days > 1 ? 's' : ''}`;
+    timeAgo = `${days} día${days > 1 ? 's' : ''}`;
   } else if (hours > 0) {
     timeAgo = `${hours} hora${hours > 1 ? 's' : ''}`;
   } else if (minutes > 0) {
@@ -52,6 +50,9 @@ interface CardSerieProps{
 }
 export default function CardSerie(props:CardSerieProps) {
     const {manga} = props;
+    // Asegurar que las fechas sean instancias de Date
+    const primaryDate = typeof manga.primaryChapter?.date === 'string' ? new Date(manga.primaryChapter.date) : manga.primaryChapter?.date;
+    const secondaryDate = typeof manga.secondaryChapter?.date === 'string' ? new Date(manga.secondaryChapter.date) : manga.secondaryChapter?.date;
     return ( 
         <>
             
@@ -70,7 +71,7 @@ export default function CardSerie(props:CardSerieProps) {
                         <div className="numeroCapViews">
                             <p className="NCapitulo">#{manga.primaryChapter.chapter}</p>
                             <p className="NViews">
-                                <span className='Nviews-text'><TimeDifference pastDate={manga.primaryChapter.date} /></span>
+                                <span className='Nviews-text'><TimeDifference pastDate={primaryDate} /></span>
                             </p>
                         </div>
                         {/* <p className="textNcapitulo">Capitulo 59</p>
@@ -86,7 +87,7 @@ export default function CardSerie(props:CardSerieProps) {
                         <div className="numeroCapViews">
                             <p className="NCapitulo">#{manga.secondaryChapter.chapter}</p>
                             <p className="NViews">
-                                <span className='Nviews-text'><TimeDifference pastDate={manga.secondaryChapter.date} /></span>
+                                <span className='Nviews-text'><TimeDifference pastDate={secondaryDate} /></span>
                             </p>
                         </div>
                         {/* <p className="textNcapitulo">Capitulo 59</p>

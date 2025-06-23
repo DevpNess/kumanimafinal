@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "npx prisma db seed"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.0.0",
@@ -65,5 +66,8 @@
   "main": "index.js",
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
 }

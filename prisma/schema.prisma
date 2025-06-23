@@ -92,9 +92,16 @@ model Manga {
   title          String          @unique
   description    String
   statusId       Int
+    statusManga StatusManga  @relation(fields: [statusId], references: [id])
   typeId         Int
+  typeManga   TypeManga    @relation(fields: [typeId], references: [id])
   authorId       Int
+  
+  authorManga AuthorManga  @relation(fields: [authorId], references: [id])
   scan           Int
+  
+  scanManga   ScanManga    @relation(fields: [scan], references: [id])
+  genres      GenreManga[]
   banner         String?
   views          Int             @default(0)
   dayViews       Int             @default(0)
@@ -110,13 +117,6 @@ model Manga {
   releaseDate    DateTime        @default(now())
   updateLast     DateTime        @updatedAt
   updateNext     DateTime?
-
-  // Relaciones (asumiendo que existen las tablas relacionadas)
-  statusManga StatusManga  @relation(fields: [statusId], references: [id])
-  typeManga   TypeManga    @relation(fields: [typeId], references: [id])
-  authorManga AuthorManga  @relation(fields: [authorId], references: [id])
-  scanManga   ScanManga    @relation(fields: [scan], references: [id])
-  genres      GenreManga[]
 }
 
 model StatusManga {
