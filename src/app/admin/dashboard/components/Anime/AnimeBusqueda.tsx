@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import TablaRegistros from './TablaRegistros';
-import ModalEdicionRegistro from './ModalEdicionRegistro';
+import TablaRegistros from '../TablaRegistros';
+import ModalEdicionRegistro from '../ModalEdicionRegistro';
 import { Input } from '@/components/ui/input';
-import SelectorSitio from './SelectorSitio';
+import SelectorSitio from '../SelectorSitio';
 import {
   AlertDialog,
-  AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,
@@ -16,16 +15,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
-const columnasManga = [
+const columnasAnime = [
   { key: 'id', label: 'ID' },
   { key: 'name', label: 'Nombre' },
   { key: 'domain', label: 'Dominio' },
-  { key: 'SelectorName', label: 'Selector Nombre' },
-  { key: 'SelectorDescription', label: 'Selector Descripción' },
-  // Puedes agregar más columnas según tu modelo
+  // Agrega más columnas según tu modelo de anime
 ];
 
-export default function MangaBusqueda({ sitios }: { sitios: any[] }) {
+export default function AnimeBusqueda({ sitios }: { sitios: any[] }) {
   const [sitioSeleccionado, setSitioSeleccionado] = useState('');
   const [editando, setEditando] = useState<any>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -37,7 +34,6 @@ export default function MangaBusqueda({ sitios }: { sitios: any[] }) {
     setData(sitios || []);
   }, [sitios]);
 
-  // Filtrar por sitio si se selecciona uno
   const dataFiltrada = sitioSeleccionado
     ? data.filter(s => s.name === sitioSeleccionado)
     : data;
@@ -48,8 +44,7 @@ export default function MangaBusqueda({ sitios }: { sitios: any[] }) {
   };
 
   const handleSave = async (nuevo: any) => {
-    // PATCH al backend
-    await fetch(`/api/scraping/mangascraping`, {
+    await fetch(`/api/series/anime`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevo),
@@ -66,7 +61,7 @@ export default function MangaBusqueda({ sitios }: { sitios: any[] }) {
 
   const confirmarBorrado = async () => {
     if (eliminarId == null) return;
-    await fetch(`/api/scraping/mangascraping`, {
+    await fetch(`/api/series/anime`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: eliminarId }),
@@ -82,13 +77,13 @@ export default function MangaBusqueda({ sitios }: { sitios: any[] }) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Búsqueda de Mangas</h2>
+      <h2 className="text-xl font-bold mb-4">Búsqueda de Animes</h2>
       <div className="mb-4">
         <SelectorSitio sitios={sitios} value={sitioSeleccionado} setValue={setSitioSeleccionado} />
       </div>
       <TablaRegistros
         data={dataFiltrada}
-        columns={columnasManga}
+        columns={columnasAnime}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -97,7 +92,7 @@ export default function MangaBusqueda({ sitios }: { sitios: any[] }) {
         onClose={() => { setModalAbierto(false); setEditando(null); }}
         onSave={handleSave}
         data={editando}
-        columns={columnasManga}
+        columns={columnasAnime}
       />
       <AlertDialog open={confirmarEliminar} onOpenChange={setConfirmarEliminar}>
         <AlertDialogContent>

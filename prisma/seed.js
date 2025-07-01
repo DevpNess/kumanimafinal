@@ -150,7 +150,7 @@ async function main() {
   const mangaTitles = [
     'One Piece', 'Naruto', 'Bleach', 'Dragon Ball', 'Hunter x Hunter',
     'Attack on Titan', 'My Hero Academia', 'Demon Slayer', 'Jujutsu Kaisen',
-    'Chainsaw Man', 'Spy x Family', 'One Punch Man', 'Tokyo Ghoul',
+    'Chainsaw Man', 'One Punch Man', 'Tokyo Ghoul',
     'Death Note', 'Fullmetal Alchemist', 'Fairy Tail', 'Black Clover',
     'The Promised Neverland', 'Dr. Stone', 'Fire Force'
   ]
@@ -158,9 +158,9 @@ async function main() {
   for (let i = 0; i < 20; i++) {
     const manga = await prisma.manga.create({
       data: {
-        path: `/manga/${mangaTitles[i].toLowerCase().replace(/\s+/g, '-')}`,
+        path: `/manga/${i+mangaTitles[i].toLowerCase().replace(/\s+/g, '-')+ i}`,
         cap: Math.floor(Math.random() * 500) + 1,
-        title: mangaTitles[i],
+        title: `${mangaTitles[i]+ i}`,
         description: `Descripción detallada de ${mangaTitles[i]}. Un manga increíble lleno de acción, aventura y personajes memorables.`,
         statusId: statuses[Math.floor(Math.random() * statuses.length)].id,
         typeId: types[Math.floor(Math.random() * types.length)].id,

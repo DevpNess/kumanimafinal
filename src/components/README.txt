@@ -1,0 +1,1 @@
+Esta carpeta contiene los componentes reutilizables de la interfaz de usuario hechos en React, que se utilizan en diferentes partes de la aplicación. 

@@ -6,7 +6,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, Home, BarChart2, Settings, BookOpen, Users, Database, FileText, LifeBuoy, Search, Library, Layers, MessageCircle, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,18 +23,42 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import Menu from './components/Menu';
-import MangaBusqueda from './components/MangaBusqueda';
+import MangaBusqueda from './components/Manga/MangaBusqueda';
 import MangaEdicion from './components/MangaEdicion';
 import MangaAgregar from './components/MangaAgregar';
 import MangaAgregarCapitulo from './components/MangaAgregarCapitulo';
 import MangaActualizar from './components/MangaActualizar';
 import MangaValidar from './components/MangaValidar';
-import AnimeBusqueda from './components/AnimeBusqueda';
+import AnimeBusqueda from './components/Anime/AnimeBusqueda';
 import AnimeEdicion from './components/AnimeEdicion';
 import AnimeAgregar from './components/AnimeAgregar';
 import AnimeAgregarCapitulo from './components/AnimeAgregarCapitulo';
 import AnimeActualizar from './components/AnimeActualizar';
 import AnimeValidar from './components/AnimeValidar';
+import ScrapingDashboard from './components/ScrapingDashboard';
+import TablaRegistros from './components/TablaRegistros';
+import ModalEdicionRegistro from './components/ModalEdicionRegistro';
+import ModalAgregarRegistro from './components/ModalAgregarRegistro';
+import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar } from '@/components/ui/avatar';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { DataTable } from './components/DataTable';
+import Image from "next/image";
+import { Tooltip, TooltipProvider } from '@/components/ui/tooltip';
+import GraficoPanel from './components/GraficoPanel';
 
 interface MangaSite {
   id: number;
@@ -88,15 +112,183 @@ const componentMap = (mangaSite: MangaSite[] = []) => ({
   'anime-agregar-capitulo': <AnimeAgregarCapitulo sitios={mangaSite || []} />,
   'anime-actualizar': <AnimeActualizar sitios={mangaSite || []} />,
   'anime-validar': <AnimeValidar sitios={mangaSite || []} />,
+  'scraping-dashboard': <ScrapingDashboard />,
 } as Record<string, React.ReactNode>);
 
-const Dashboard = () => {
+// Campos completos por tabla, extraídos de schema.prisma
+const camposPorTabla: Record<string, { key: string, label: string }[]> = {
+  User: [
+    { key: 'id', label: 'ID' },
+    { key: 'avatar', label: 'Avatar' },
+    { key: 'name', label: 'Nombre' },
+    { key: 'lastName', label: 'Apellido' },
+    { key: 'nickName', label: 'Nick' },
+    { key: 'email', label: 'Email' },
+    { key: 'emailVerified', label: 'Email Verificado' },
+    { key: 'password', label: 'Contraseña' },
+    { key: 'createdAt', label: 'Creado' },
+    { key: 'updatedAt', label: 'Actualizado' },
+  ],
+  Account: [
+    { key: 'userId', label: 'UserId' },
+    { key: 'type', label: 'Tipo' },
+    { key: 'provider', label: 'Proveedor' },
+    { key: 'providerAccountId', label: 'ProviderAccountId' },
+    { key: 'refresh_token', label: 'Refresh Token' },
+    { key: 'access_token', label: 'Access Token' },
+    { key: 'expires_at', label: 'Expires At' },
+    { key: 'token_type', label: 'Token Type' },
+    { key: 'scope', label: 'Scope' },
+    { key: 'id_token', label: 'Id Token' },
+    { key: 'session_state', label: 'Session State' },
+    { key: 'createdAt', label: 'Creado' },
+    { key: 'updatedAt', label: 'Actualizado' },
+  ],
+  Session: [
+    { key: 'sessionToken', label: 'SessionToken' },
+    { key: 'userId', label: 'UserId' },
+    { key: 'expires', label: 'Expires' },
+    { key: 'createdAt', label: 'Creado' },
+    { key: 'updatedAt', label: 'Actualizado' },
+  ],
+  VerificationToken: [
+    { key: 'identifier', label: 'Identifier' },
+    { key: 'token', label: 'Token' },
+    { key: 'expires', label: 'Expires' },
+  ],
+  Authenticator: [
+    { key: 'id', label: 'ID' },
+    { key: 'credentialID', label: 'CredentialID' },
+    { key: 'userId', label: 'UserId' },
+    { key: 'providerAccountId', label: 'ProviderAccountId' },
+    { key: 'credentialPublicKey', label: 'CredentialPublicKey' },
+    { key: 'counter', label: 'Counter' },
+    { key: 'credentialDeviceType', label: 'CredentialDeviceType' },
+    { key: 'credentialBackedUp', label: 'CredentialBackedUp' },
+    { key: 'transports', label: 'Transports' },
+  ],
+  Manga: [
+    { key: 'id', label: 'ID' },
+    { key: 'path', label: 'Path' },
+    { key: 'cap', label: 'Capítulo' },
+    { key: 'title', label: 'Título' },
+    { key: 'description', label: 'Descripción' },
+    { key: 'statusId', label: 'StatusId' },
+    { key: 'typeId', label: 'TypeId' },
+    { key: 'authorId', label: 'AuthorId' },
+    { key: 'scan', label: 'Scan' },
+    { key: 'banner', label: 'Banner' },
+    { key: 'views', label: 'Vistas' },
+    { key: 'dayViews', label: 'Vistas Día' },
+    { key: 'weekViews', label: 'Vistas Semana' },
+    { key: 'monthViews', label: 'Vistas Mes' },
+    { key: 'likesCount', label: 'Likes' },
+    { key: 'favoritesCount', label: 'Favoritos' },
+    { key: 'seeLaterCount', label: 'Ver Después' },
+    { key: 'releaseDate', label: 'Fecha Lanzamiento' },
+    { key: 'updateLast', label: 'Actualizado' },
+    { key: 'updateNext', label: 'Próxima Actualización' },
+  ],
+  StatusManga: [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Nombre' },
+  ],
+  TypeManga: [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Nombre' },
+  ],
+  AuthorManga: [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Nombre' },
+  ],
+  ScanManga: [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Nombre' },
+  ],
+  Genre: [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Nombre' },
+  ],
+  GenreManga: [
+    { key: 'mangaId', label: 'MangaId' },
+    { key: 'genreId', label: 'GenreId' },
+  ],
+  RatingManga: [
+    { key: 'id', label: 'ID' },
+    { key: 'userId', label: 'UserId' },
+    { key: 'mangaId', label: 'MangaId' },
+    { key: 'score', label: 'Puntaje' },
+  ],
+  MangaLike: [
+    { key: 'id', label: 'ID' },
+    { key: 'userId', label: 'UserId' },
+    { key: 'mangaId', label: 'MangaId' },
+  ],
+  MangaSeeLater: [
+    { key: 'id', label: 'ID' },
+    { key: 'userId', label: 'UserId' },
+    { key: 'mangaId', label: 'MangaId' },
+  ],
+  MangaFavorite: [
+    { key: 'id', label: 'ID' },
+    { key: 'userId', label: 'UserId' },
+    { key: 'mangaId', label: 'MangaId' },
+  ],
+  MangaScraping: [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Nombre' },
+    { key: 'domain', label: 'Dominio' },
+    { key: 'SelectorName', label: 'Selector Nombre' },
+    { key: 'SelectorDescription', label: 'Selector Descripción' },
+    { key: 'SelectorStatus', label: 'Selector Status' },
+    { key: 'SelectorType', label: 'Selector Type' },
+    { key: 'SelectorAuthor', label: 'Selector Author' },
+    { key: 'SelectorScan', label: 'Selector Scan' },
+    { key: 'SelectorGenres', label: 'Selector Géneros' },
+    { key: 'SelectorBanner', label: 'Selector Banner' },
+    { key: 'SelectorNumberChapters', label: 'Selector N° Capítulos' },
+    { key: 'SelectorImageChapter', label: 'Selector Imagen Capítulo' },
+  ],
+};
+
+const tablas = Object.keys(camposPorTabla);
+const PAGE_SIZE = 10;
+
+export default function AdminUniversalDB() {
   const [selected, setSelected] = React.useState('manga-busqueda');
   const [mangaSite, setMangaSite] = useState<MangaSite[]>([]);
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
   const [isLoading, setIsLoading] = useState(true);
   const { data: session, status } = useSession();
+  const [tabla, setTabla] = useState('User');
+  const [data, setData] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [editando, setEditando] = useState<any>(null);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [modalAgregarAbierto, setModalAgregarAbierto] = useState(false);
+  const [eliminarId, setEliminarId] = useState<string | number | null>(null);
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+  const [scrapingStatus, setScrapingStatus] = useState<'activo' | 'inactivo'>('activo');
+  const [scrapingLogs, setScrapingLogs] = useState([
+    { time: '2024-05-20 12:34', msg: 'Scraping completado para MangaPlus.' },
+    { time: '2024-05-20 11:10', msg: 'Scraping iniciado para TMO.' },
+    { time: '2024-05-20 10:55', msg: 'Error de conexión con sitio X.' },
+  ]);
+  const [scrapingLast, setScrapingLast] = useState('2024-05-20 12:34');
+
+  const columns = camposPorTabla[tabla] || [{ key: 'id', label: 'ID' }];
+
+  // Generar columnas para Tanstack Table
+  const columnsTanstack = (camposPorTabla[tabla] || [{ key: 'id', label: 'ID' }]).map(col => ({
+    id: col.key,
+    accessorKey: col.key,
+    header: col.label,
+    cell: (info: any) => info.getValue(),
+  }));
 
   useEffect(() => {
     setIsLoading(true);
@@ -112,17 +304,324 @@ const Dashboard = () => {
       });
   }, []);
 
+  // Protección de ruta: si no hay sesión, redirigir a /auth/
+  React.useEffect(() => {
+    if (status === 'unauthenticated') {
+      window.location.href = '/auth/';
+    }
+  }, [status]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const params = new URLSearchParams({
+      table: tabla,
+      page: String(page),
+      limit: String(PAGE_SIZE),
+      search: search,
+    });
+    const res = await fetch(`/api/db?${params.toString()}`);
+    const result = await res.json();
+    setData(Array.isArray(result.data) ? result.data : []);
+    setTotal(result.total);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line
+  }, [tabla, page, search]);
+
+  const handleEdit = (row: any) => {
+    setEditando(row);
+    setModalAbierto(true);
+  };
+
+  const handleSave = async (nuevo: any) => {
+    await fetch(`/api/db?table=${tabla}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevo),
+    });
+    fetchData();
+    setModalAbierto(false);
+    setEditando(null);
+  };
+
+  const handleAgregar = async (nuevo: any) => {
+    await fetch(`/api/db?table=${tabla}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nuevo),
+    });
+    fetchData();
+    setModalAgregarAbierto(false);
+  };
+
+  const handleDelete = (row: any) => {
+    setEliminarId(row.id);
+    setConfirmarEliminar(true);
+  };
+
+  const confirmarBorrado = async () => {
+    if (eliminarId == null) return;
+    await fetch(`/api/db?table=${tabla}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: eliminarId }),
+    });
+    fetchData();
+    setEliminarId(null);
+    setConfirmarEliminar(false);
+  };
+
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+
+  // KPIs de ejemplo
+  const kpis = [
+    {
+      title: 'Total Revenue',
+      value: '$1,250.00',
+      trend: '+12.5%',
+      trendType: 'up',
+      subtitle: 'Trending up this month',
+      subdesc: 'Visitors for the last 6 months',
+    },
+    {
+      title: 'New Customers',
+      value: '1,234',
+      trend: '-20%',
+      trendType: 'down',
+      subtitle: 'Down 20% this period',
+      subdesc: 'Acquisition needs attention',
+    },
+    {
+      title: 'Active Accounts',
+      value: '45,678',
+      trend: '+12.5%',
+      trendType: 'up',
+      subtitle: 'Strong user retention',
+      subdesc: 'Engagement exceed targets',
+    },
+    {
+      title: 'Growth Rate',
+      value: '4.5%',
+      trend: '+4.5%',
+      trendType: 'up',
+      subtitle: 'Steady performance increase',
+      subdesc: 'Meets growth projections',
+    },
+  ];
+
+  // Tabs de categorías sobre la tabla
+  const categorias = [
+    { key: 'outline', label: 'Outline', count: 8 },
+    { key: 'performance', label: 'Past Performance', count: 3 },
+    { key: 'personnel', label: 'Key Personnel', count: 2 },
+    { key: 'documents', label: 'Focus Documents', count: 4 },
+  ];
+  const [categoria, setCategoria] = useState('outline');
+
   if (status === "loading" || isLoading) {
-    return <p>Loading...</p>;
+    return <div className="flex items-center justify-center h-screen"><span className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></span></div>;
   }
 
+  if (!session) return null;
+
   return (
-    <div className="flex h-screen min-h-screen w-full bg-[#18181b]">
-      <Menu selected={selected} onSelect={setSelected} />
-      <div className="flex-1 p-6 overflow-auto m-[10px] rounded-xl shadow-md bg-[#09090b]">
-        {componentMap(mangaSite)[selected]}
+    <TooltipProvider>
+      <div className="flex min-h-screen bg-[#101012]">
+        {/* Panel izquierdo fijo */}
+        <aside className="w-72 h-screen sticky top-0 left-0 flex-shrink-0 z-20 flex flex-col justify-between bg-[#101012] border-r border-[#23232b] shadow-lg">
+          <div>
+            {/* Logo grande y nombre */}
+            <div className="flex items-center gap-3 px-6 py-8 border-b border-[#23232b]">
+              <div className="h-12 w-12 rounded-full overflow-hidden bg-[#060608] flex items-center justify-center">
+                <Image src="/media/logo_cabeza.png" alt="Logo" width={48} height={48} priority />
+              </div>
+              <span className="text-2xl font-extrabold tracking-wide text-white">Kumanima</span>
+            </div>
+            {/* Menú principal con animaciones y sección extra de Scraping */}
+            <nav className="flex flex-col gap-2 mt-6 px-4">
+              <Button variant={tabla === 'User' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('User')}><Home className="w-5 h-5 transition-all duration-200 group-hover:scale-110" /> Dashboard</Button>
+              <Button variant={tabla === 'Manga' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Manga')}><BookOpen className="w-5 h-5" /> Mangas</Button>
+              <Button variant={tabla === 'Account' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Account')}><Users className="w-5 h-5" /> Cuentas</Button>
+              <Button variant={tabla === 'Session' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Session')}><Database className="w-5 h-5" /> Sesiones</Button>
+              <Button variant={tabla === 'Genre' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Genre')}><Layers className="w-5 h-5" /> Géneros</Button>
+              {/* Sección visual extra para Scraping */}
+              <div className="relative group mb-2">
+                <Button
+                  variant={tabla === 'MangaScraping' ? 'secondary' : 'ghost'}
+                  className={
+                    `w-full justify-start gap-3 text-base transition-all duration-200
+                    hover:scale-[1.05] hover:bg-green-900/20 focus:scale-105
+                    active:scale-95 shadow-md shadow-green-900/10
+                    pr-12 relative overflow-hidden group`
+                  }
+                  onClick={() => setTabla('MangaScraping')}
+                >
+                  <Library className="w-5 h-5 animate-pulse text-green-400 group-hover:scale-125 transition-transform duration-200" />
+                  Scraping
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <Badge variant={scrapingStatus === 'activo' ? 'success' : 'destructive'} className="animate-pulse text-xs px-2">
+                      {scrapingStatus === 'activo' ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                  </span>
+                </Button>
+                {/* Panel visual de estado y logs */}
+                {tabla === 'MangaScraping' && (
+                  <div className="mt-2 bg-[#23232b] border border-green-900/30 rounded-xl p-4 shadow-lg animate-fade-in-up">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-green-400 font-bold">●</span>
+                      <span className="text-sm text-white font-semibold">Estado: {scrapingStatus === 'activo' ? 'Scraping activo' : 'Scraping inactivo'}</span>
+                      <Badge variant="secondary" className="ml-2">Último: {scrapingLast}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-1">Logs recientes:</div>
+                    <ul className="text-xs text-white space-y-1 max-h-24 overflow-y-auto pr-2 custom-scrollbar">
+                      {scrapingLogs.map((log, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="text-green-300">{log.time}</span>
+                          <span className="truncate">{log.msg}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <Button variant={tabla === 'Reports' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Reports')}><FileText className="w-5 h-5" /> Reports</Button>
+              <Button variant={tabla === 'Analytics' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Analytics')}><BarChart2 className="w-5 h-5" /> Analytics</Button>
+              <Button variant={tabla === 'Team' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Team')}><Users className="w-5 h-5" /> Team</Button>
+              <Button variant={tabla === 'WordAssistant' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('WordAssistant')}><MessageCircle className="w-5 h-5" /> Word Assistant</Button>
+              <Button variant={tabla === 'DataLibrary' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('DataLibrary')}><Database className="w-5 h-5" /> Data Library</Button>
+              <div className="my-4 border-t border-[#23232b]" />
+              <Button variant={tabla === 'Settings' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Settings')}><Settings className="w-5 h-5" /> Settings</Button>
+              <Button variant={tabla === 'Help' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Help')}><LifeBuoy className="w-5 h-5" /> Get Help</Button>
+              <Button variant={tabla === 'Search' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Search')}><Search className="w-5 h-5" /> Search</Button>
+            </nav>
+          </div>
+          {/* Usuario y versión abajo */}
+          <div className="px-6 pb-8 border-t border-[#23232b] mt-6 flex items-center gap-3 bg-[#101012]">
+            {session?.user?.image ? (
+              <Image src={session.user.image} alt={session.user.name || 'Avatar'} width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+            ) : (
+              <Avatar className="h-10 w-10">{session?.user?.name?.[0] || 'U'}</Avatar>
+            )}
+            <div>
+              <div className="text-base font-semibold text-white">{session?.user?.name || 'Usuario'}</div>
+              <div className="text-xs text-muted-foreground">{session?.user?.email || ''}</div>
+              <span className="text-xs text-muted-foreground">v0.0.1</span>
+            </div>
+          </div>
+        </aside>
+        {/* Pantalla derecha con scroll y estilo profesional */}
+        <main className="flex-1 flex flex-col items-center bg-[#18181b] min-h-screen overflow-y-auto p-2">
+          {/* KPIs */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-full mb-6">
+            {kpis.map((kpi, i) => (
+              <Card key={i} className="rounded-xl bg-[#18181b] border border-[#23232b] p-0">
+                <div className="relative p-6 pb-4 h-full flex flex-col justify-between min-h-[170px]">
+                  {/* Badge arriba derecha */}
+                  <div className="absolute top-4 right-4">
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#39393f] bg-[#18181b] text-xs font-semibold text-white">
+                      {kpi.trendType === 'up' ? <ArrowUpRight className="w-3 h-3 text-green-400" /> : <ArrowDownRight className="w-3 h-3 text-red-400" />}
+                      {kpi.trend}
+                    </span>
+                  </div>
+                  {/* Título */}
+                  <div className="text-sm text-[#a1a1aa] font-medium mb-1">{kpi.title}</div>
+                  {/* Valor principal */}
+                  <div className="text-3xl font-bold text-white mb-2">{kpi.value}</div>
+                  {/* Subtítulo en negrita con flecha */}
+                  <div className="flex items-center gap-1 font-semibold text-sm mb-0.5 text-white">
+                    <span>{kpi.subtitle}</span>
+                    <ArrowUpRight className="w-4 h-4 ml-1 text-white" />
+                  </div>
+                  {/* Texto secundario */}
+                  <div className="text-xs text-[#a1a1aa]">{kpi.subdesc}</div>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <GraficoPanel />
+          {/* Tabs para diferentes vistas si quieres */}
+          <Tabs defaultValue="tabla" className="w-full max-w-full mb-2">
+            <TabsList className="mb-2">
+              <TabsTrigger value="tabla">Registros</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="config">Configuración</TabsTrigger>
+            </TabsList>
+            <TabsContent value="tabla">
+              <Card className="w-full rounded-2xl shadow-lg border border-[#282838]">
+                <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-2xl font-bold text-primary mb-2">{tabla}</CardTitle>
+                  <div className="flex gap-2">
+                    <Button variant="outline">Columnas</Button>
+                    <Button onClick={() => setModalAgregarAbierto(true)} variant="default">Agregar registro</Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="overflow-x-auto">
+                  {/* Tabs de categorías sobre la tabla */}
+                  <div className="flex items-center gap-2 mb-4 w-full max-w-6xl">
+                    {categorias.map(cat => (
+                      <Button key={cat.key} variant={categoria === cat.key ? 'secondary' : 'ghost'} onClick={() => setCategoria(cat.key)} className="flex items-center gap-2 text-sm px-4 py-2">
+                        {cat.label}
+                        <Badge variant="outline" className="ml-1 text-xs px-2 py-0.5">{cat.count}</Badge>
+                      </Button>
+                    ))}
+                  </div>
+                  <DataTable
+                    data={data}
+                    columns={columnsTanstack}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    loading={loading}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="analytics">
+              <Card className="w-full rounded-2xl shadow-lg bg-[#23232b] border border-[#282838] p-8 text-white">Analytics de ejemplo aquí...</Card>
+            </TabsContent>
+            <TabsContent value="config">
+              <Card className="w-full rounded-2xl shadow-lg bg-[#23232b] border border-[#282838] p-8 text-white">Configuración de ejemplo aquí...</Card>
+            </TabsContent>
+          </Tabs>
+          <ModalAgregarRegistro
+            open={modalAgregarAbierto}
+            onClose={() => setModalAgregarAbierto(false)}
+            onSave={handleAgregar}
+            columns={columns}
+          />
+          <ModalEdicionRegistro
+            open={modalAbierto}
+            onClose={() => { setModalAbierto(false); setEditando(null); }}
+            onSave={handleSave}
+            data={editando}
+            columns={columns}
+          />
+          <AlertDialog open={confirmarEliminar} onOpenChange={setConfirmarEliminar}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar este registro?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel asChild>
+                  <Button variant="outline" onClick={() => setConfirmarEliminar(false)}>Cancelar</Button>
+                </AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <Button variant="destructive" onClick={confirmarBorrado}>Eliminar</Button>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          {loading && <div className="text-center mt-4 text-muted-foreground">Cargando...</div>}
+        </main>
       </div>
-    </div>
+    </TooltipProvider>
   );
-};
-export default Dashboard;
+}

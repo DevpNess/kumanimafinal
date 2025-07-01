@@ -160,7 +160,7 @@ async function main() {
       data: {
         path: `/manga/${mangaTitles[i].toLowerCase().replace(/\s+/g, '-')}`,
         cap: Math.floor(Math.random() * 500) + 1,
-        title: mangaTitles[i],
+        title: `Manga de prueba ${i + 1}`,
         description: `Descripción detallada de ${mangaTitles[i]}. Un manga increíble lleno de acción, aventura y personajes memorables.`,
         statusId: statuses[Math.floor(Math.random() * statuses.length)].id,
         typeId: types[Math.floor(Math.random() * types.length)].id,
@@ -333,6 +333,26 @@ async function main() {
       create: config,
     })
   }
+
+  await prisma.pageStats.createMany({
+    data: [
+      { date: new Date('2024-04-05'), totalRevenue: 1250, newCustomers: 1234, activeAccounts: 45678, growthRate: 4.5 },
+      { date: new Date('2024-04-17'), totalRevenue: 1300, newCustomers: 1200, activeAccounts: 46000, growthRate: 4.7 },
+      { date: new Date('2024-04-23'), totalRevenue: 1400, newCustomers: 1100, activeAccounts: 47000, growthRate: 4.8 },
+      { date: new Date('2024-04-29'), totalRevenue: 1500, newCustomers: 1150, activeAccounts: 48000, growthRate: 5.0 },
+      { date: new Date('2024-05-05'), totalRevenue: 1600, newCustomers: 1250, activeAccounts: 49000, growthRate: 5.2 },
+      { date: new Date('2024-05-11'), totalRevenue: 1700, newCustomers: 1300, activeAccounts: 50000, growthRate: 5.3 },
+      { date: new Date('2024-05-17'), totalRevenue: 1800, newCustomers: 1350, activeAccounts: 51000, growthRate: 5.5 },
+      { date: new Date('2024-05-23'), totalRevenue: 1900, newCustomers: 1400, activeAccounts: 52000, growthRate: 5.7 },
+      { date: new Date('2024-05-29'), totalRevenue: 2000, newCustomers: 1450, activeAccounts: 53000, growthRate: 5.8 },
+      { date: new Date('2024-06-04'), totalRevenue: 2100, newCustomers: 1500, activeAccounts: 54000, growthRate: 6.0 },
+      { date: new Date('2024-06-10'), totalRevenue: 2200, newCustomers: 1550, activeAccounts: 55000, growthRate: 6.2 },
+      { date: new Date('2024-06-16'), totalRevenue: 2300, newCustomers: 1600, activeAccounts: 56000, growthRate: 6.3 },
+      { date: new Date('2024-06-22'), totalRevenue: 2400, newCustomers: 1650, activeAccounts: 57000, growthRate: 6.5 },
+      { date: new Date('2024-06-29'), totalRevenue: 2500, newCustomers: 1700, activeAccounts: 58000, growthRate: 6.7 },
+    ],
+    skipDuplicates: true,
+  });
 
   console.log('✅ ¡Seed completado exitosamente!')
   console.log(`📊 Resumen:`)

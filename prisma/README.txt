@@ -1,0 +1,1 @@
+Esta carpeta contiene la configuración y archivos relacionados con la base de datos, incluyendo el esquema (schema.prisma), migraciones y scripts de seed para poblar datos iniciales. 

@@ -1,0 +1,1 @@
+Esta carpeta contiene la estructura principal de la aplicación Next.js, incluyendo las rutas, páginas y lógica principal. 

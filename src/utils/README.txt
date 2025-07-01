@@ -1,0 +1,1 @@
+Esta carpeta contiene funciones utilitarias y helpers que ayudan a realizar tareas comunes en la aplicación. 

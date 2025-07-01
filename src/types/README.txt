@@ -1,0 +1,1 @@
+Esta carpeta contiene definiciones de tipos TypeScript que ayudan a tipar correctamente los datos y estructuras usadas en la aplicación. 

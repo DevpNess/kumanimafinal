@@ -1,44 +1,43 @@
 import React from 'react';
+import { Home, BarChart2, BookOpen, Users, Database, FileText, Layers, MessageCircle, Library, Settings, LifeBuoy, Search } from "lucide-react";
 
-const menuOptions = [
+const menuSections = [
   {
-    label: 'Mangas',
-    options: [
-      { key: 'manga-busqueda', label: 'Búsqueda' },
-      { key: 'manga-edicion', label: 'Edición' },
-      { key: 'manga-agregar', label: 'Agregar Nuevo Manga' },
-      { key: 'manga-agregar-capitulo', label: 'Agregar nuevo capítulo de Manga' },
-      { key: 'manga-actualizar', label: 'Actualizar' },
-      { key: 'manga-validar', label: 'Validar Series Nuevas' },
-    ],
+    title: "Home",
+    items: [
+      { key: "Dashboard", label: "Dashboard", icon: <Home className="w-5 h-5" /> },
+      { key: "Lifecycle", label: "Lifecycle", icon: <BarChart2 className="w-5 h-5" /> },
+      { key: "Analytics", label: "Analytics", icon: <BarChart2 className="w-5 h-5" /> },
+      { key: "Projects", label: "Projects", icon: <BookOpen className="w-5 h-5" /> },
+      { key: "Team", label: "Team", icon: <Users className="w-5 h-5" /> },
+    ]
   },
   {
-    label: 'Anime',
-    options: [
-      { key: 'anime-busqueda', label: 'Búsqueda' },
-      { key: 'anime-edicion', label: 'Edición' },
-      { key: 'anime-agregar', label: 'Agregar Nuevo Anime' },
-      { key: 'anime-agregar-capitulo', label: 'Agregar nuevo capítulo de Anime' },
-      { key: 'anime-actualizar', label: 'Actualizar' },
-      { key: 'anime-validar', label: 'Validar Series Nuevas' },
-    ],
-  },
+    title: "Documents",
+    items: [
+      { key: "DataLibrary", label: "Data Library", icon: <Database className="w-5 h-5" /> },
+      { key: "Reports", label: "Reports", icon: <FileText className="w-5 h-5" /> },
+      { key: "WordAssistant", label: "Word Assistant", icon: <MessageCircle className="w-5 h-5" /> },
+      { key: "More", label: "More", icon: <Library className="w-5 h-5" /> },
+    ]
+  }
 ];
 
 export default function Menu({ selected, onSelect }: { selected: string, onSelect: (key: string) => void }) {
   return (
-    <nav className="w-64 h-full flex flex-col p-4 group peer hidden text-sidebar-foreground md:block">
-      {menuOptions.map((section) => (
-        <div key={section.label} className="mb-6">
-          <div className="font-bold mb-2">{section.label}</div>
-          <ul>
-            {section.options.map((opt) => (
+    <nav className="w-64 h-full flex flex-col p-4 text-sidebar-foreground bg-[#18181b] border-r border-[#23232b] divide-y divide-[#23232b]">
+      {menuSections.map((section, idx) => (
+        <div key={section.title} className={idx !== 0 ? "pt-6" : ""}>
+          <div className="font-bold mb-2 text-xs uppercase tracking-widest text-[#a1a1aa]">{section.title}</div>
+          <ul className="space-y-1">
+            {section.items.map(opt => (
               <li key={opt.key}>
                 <button
-                  className={`w-full text-left px-2 py-1 rounded hover:bg-muted ${selected === opt.key ? 'bg-muted font-semibold' : ''}`}
+                  className={`w-full flex items-center gap-3 text-left px-2 py-2 rounded-lg hover:bg-[#23232b] transition-colors ${selected === opt.key ? 'bg-[#23232b] font-semibold text-white' : 'text-[#e4e4e7]'}`}
                   onClick={() => onSelect(opt.key)}
                 >
-                  {opt.label}
+                  {opt.icon}
+                  <span>{opt.label}</span>
                 </button>
               </li>
             ))}

@@ -1,0 +1,1 @@
+Esta carpeta contiene todo el código fuente de la aplicación, incluyendo componentes, hooks, utilidades, contexto, tipos y la estructura principal de la app. 

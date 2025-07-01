@@ -1,0 +1,1 @@
+Un hook en React es una función especial que permite usar estado y otras características de React en componentes funcionales. Esta carpeta almacena hooks personalizados reutilizables en la aplicación. 

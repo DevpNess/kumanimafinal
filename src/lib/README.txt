@@ -1,0 +1,1 @@
+Esta carpeta contiene librerías, configuraciones y utilidades específicas que se usan en toda la aplicación. 

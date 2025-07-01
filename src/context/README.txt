@@ -1,0 +1,1 @@
+Esta carpeta contiene los contextos de React, que permiten compartir datos globales y lógica entre diferentes componentes de la aplicación. 

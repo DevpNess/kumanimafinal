@@ -244,3 +244,14 @@ model MangaScraping {
   SelectorNumberChapters String
   SelectorImageChapter   String
 }
+
+model PageStats {
+  id         Int      @id @default(autoincrement())
+  date       DateTime @unique
+  totalRevenue   Float
+  newCustomers  Int
+  activeAccounts Int
+  growthRate    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

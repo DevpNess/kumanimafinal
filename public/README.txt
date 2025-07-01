@@ -1,0 +1,1 @@
+Esta carpeta contiene archivos estáticos accesibles públicamente, como imágenes, íconos, y otros recursos multimedia utilizados por la aplicación. 
