@@ -17,6 +17,13 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Pencil, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SlidersHorizontal } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -25,6 +32,11 @@ interface DataTableProps<TData, TValue> {
   onEdit?: (row: TData) => void;
   onDelete?: (row: TData) => void;
   isLoading?: boolean;
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  rowsPerPage?: number;
+  onRowsPerPageChange?: (rows: number) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -34,11 +46,25 @@ export function DataTable<TData, TValue>({
   onEdit,
   onDelete,
   isLoading,
+  page,
+  totalPages,
+  onPageChange,
+  rowsPerPage,
+  onRowsPerPageChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
 
+  const [internalRowsPerPage, setInternalRowsPerPage] = React.useState(10);
+  const effectiveRowsPerPage = rowsPerPage ?? internalRowsPerPage;
+  const setRowsPerPage = onRowsPerPageChange ?? setInternalRowsPerPage;
+
+  const [internalPage, setInternalPage] = React.useState(0);
+  const effectivePage = page ?? internalPage;
+  const setPage = onPageChange ?? setInternalPage;
+
+  const isManualPagination = page !== undefined && totalPages !== undefined && onPageChange && rowsPerPage !== undefined && onRowsPerPageChange;
   const table = useReactTable({
     data,
     columns,
@@ -46,6 +72,7 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
       globalFilter,
+      pagination: { pageIndex: effectivePage, pageSize: effectiveRowsPerPage },
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -53,9 +80,24 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    manualPagination: !!pageCount,
-    pageCount,
+    manualPagination: isManualPagination,
+    pageCount: isManualPagination ? totalPages : pageCount,
   });
+
+  React.useEffect(() => {
+    table.setPageSize(effectiveRowsPerPage);
+  }, [effectiveRowsPerPage]);
+  React.useEffect(() => {
+    table.setPageIndex(effectivePage);
+  }, [effectivePage]);
+
+  const handleRowsPerPageChange = (size: number) => {
+    setRowsPerPage(size);
+    setPage(0);
+  };
+  const handlePageChange = (pageIndex: number) => {
+    setPage(pageIndex);
+  };
 
   return (
     <Card className="w-full">
@@ -67,9 +109,28 @@ export function DataTable<TData, TValue>({
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="max-w-xs"
           />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-2 flex gap-2 items-center">
+                <SlidersHorizontal className="w-4 h-4" /> Columnas
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
+              {table.getAllLeafColumns().map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={() => column.toggleVisibility()}
+                  className="capitalize"
+                >
+                  {column.columnDef.header as string}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <ScrollArea className="w-full overflow-x-auto rounded-xl border border-[#23232b] bg-[#18181b]">
-          <table className="min-w-full divide-y divide-[#23232b]">
+          <table className="min-w-max divide-y divide-[#23232b]">
             <thead className="bg-[#23232b]">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -170,25 +231,71 @@ export function DataTable<TData, TValue>({
         </ScrollArea>
         <div className="flex items-center justify-between mt-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+            {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Siguiente
-            </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Rows per page</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="px-2 py-1 text-sm min-w-[48px] justify-between">
+                    {effectiveRowsPerPage}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {[10, 20, 30, 40, 50].map((size) => (
+                    <DropdownMenuCheckboxItem
+                      key={size}
+                      checked={effectiveRowsPerPage === size}
+                      onCheckedChange={() => handleRowsPerPageChange(size)}
+                    >
+                      {size}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <span className="text-sm">
+              Page {effectivePage + 1} of {totalPages ?? table.getPageCount()}
+            </span>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handlePageChange(0)}
+                disabled={effectivePage === 0}
+                className="px-2"
+              >
+                {'<<'}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handlePageChange(effectivePage - 1)}
+                disabled={effectivePage === 0}
+                className="px-2"
+              >
+                {'<'}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handlePageChange(effectivePage + 1)}
+                disabled={totalPages ? effectivePage + 1 >= totalPages : !table.getCanNextPage()}
+                className="px-2"
+              >
+                {'>'}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handlePageChange((totalPages ?? table.getPageCount()) - 1)}
+                disabled={totalPages ? effectivePage + 1 >= totalPages : !table.getCanNextPage()}
+                className="px-2"
+              >
+                {'>>'}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

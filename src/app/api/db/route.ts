@@ -22,6 +22,7 @@ function getModel(table: string) {
     MangaSeeLater: prisma.mangaSeeLater,
     MangaFavorite: prisma.mangaFavorite,
     MangaScraping: prisma.mangaScraping,
+    PageStats: prisma.pageStats,
     // Agrega aquí más modelos si los tienes
   };
   return models[table as keyof typeof models];
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
 
   const [total, data] = await Promise.all([
     model.count({ where }),
-    model.findMany({ where, skip, take: limit, orderBy: { [orderByField]: 'desc' } }),
+    model.findMany({ where, skip, take: limit, orderBy: { [orderByField]: 'asc' } }),
   ]);
   return NextResponse.json({ data, total, page, limit });
 }

@@ -6,7 +6,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, Home, BarChart2, Settings, BookOpen, Users, Database, FileText, LifeBuoy, Search, Library, Layers, MessageCircle, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { Check, ChevronsUpDown, Home, BarChart2, Settings, BookOpen, Users, Database, FileText, LifeBuoy, Search, Library, Layers, MessageCircle, ArrowUpRight, ArrowDownRight, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -59,6 +59,15 @@ import { DataTable } from './components/DataTable';
 import Image from "next/image";
 import { Tooltip, TooltipProvider } from '@/components/ui/tooltip';
 import GraficoPanel from './components/GraficoPanel';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { signOut } from "next-auth/react"
 
 interface MangaSite {
   id: number;
@@ -264,7 +273,14 @@ export default function AdminUniversalDB() {
   const [tabla, setTabla] = useState('User');
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('datatable-rows-per-page');
+      return saved ? parseInt(saved, 10) : 10;
+    }
+    return 10;
+  });
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [editando, setEditando] = useState<any>(null);
@@ -279,6 +295,7 @@ export default function AdminUniversalDB() {
     { time: '2024-05-20 10:55', msg: 'Error de conexión con sitio X.' },
   ]);
   const [scrapingLast, setScrapingLast] = useState('2024-05-20 12:34');
+  const [dbOpen, setDbOpen] = React.useState(true);
 
   const columns = camposPorTabla[tabla] || [{ key: 'id', label: 'ID' }];
 
@@ -315,12 +332,19 @@ export default function AdminUniversalDB() {
     setLoading(true);
     const params = new URLSearchParams({
       table: tabla,
-      page: String(page),
-      limit: String(PAGE_SIZE),
+      page: String(page + 1),
+      limit: String(rowsPerPage),
       search: search,
     });
+    const skip = page * rowsPerPage;
     const res = await fetch(`/api/db?${params.toString()}`);
-    const result = await res.json();
+    let result = {};
+    try {
+      result = await res.json();
+    } catch (e) {
+      result = { data: [], total: 0 };
+    }
+    console.log('DEBUG fetchData:', { result, page, rowsPerPage, skip });
     setData(Array.isArray(result.data) ? result.data : []);
     setTotal(result.total);
     setLoading(false);
@@ -329,7 +353,18 @@ export default function AdminUniversalDB() {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-  }, [tabla, page, search]);
+  }, [tabla, page, search, rowsPerPage]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('datatable-rows-per-page', String(rowsPerPage));
+    }
+  }, [rowsPerPage]);
+
+  // Al cambiar rowsPerPage, regresa siempre a la primera página
+  useEffect(() => {
+    setPage(0);
+  }, [rowsPerPage]);
 
   const handleEdit = (row: any) => {
     setEditando(row);
@@ -374,7 +409,7 @@ export default function AdminUniversalDB() {
     setConfirmarEliminar(false);
   };
 
-  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const totalPages = Math.ceil(total / rowsPerPage) || 1;
 
   // KPIs de ejemplo
   const kpis = [
@@ -421,6 +456,12 @@ export default function AdminUniversalDB() {
   ];
   const [categoria, setCategoria] = useState('outline');
 
+  React.useEffect(() => {
+    if (page > 0 && page >= totalPages) {
+      setPage(totalPages - 1);
+    }
+  }, [totalPages, page]);
+
   if (status === "loading" || isLoading) {
     return <div className="flex items-center justify-center h-screen"><span className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></span></div>;
   }
@@ -431,7 +472,12 @@ export default function AdminUniversalDB() {
     <TooltipProvider>
       <div className="flex min-h-screen bg-[#101012]">
         {/* Panel izquierdo fijo */}
-        <aside className="w-72 h-screen sticky top-0 left-0 flex-shrink-0 z-20 flex flex-col justify-between bg-[#101012] border-r border-[#23232b] shadow-lg">
+        <aside className="w-72 h-screen sticky top-0 left-0 flex-shrink-0 z-20 flex flex-col justify-between bg-[#101012] border-r border-[#23232b] shadow-lg overflow-x-hidden"
+          style={{ overflowY: 'auto', scrollbarWidth: 'none' }}
+        >
+          <style>{`
+            aside::-webkit-scrollbar { display: none; }
+          `}</style>
           <div>
             {/* Logo grande y nombre */}
             <div className="flex items-center gap-3 px-6 py-8 border-b border-[#23232b]">
@@ -440,13 +486,55 @@ export default function AdminUniversalDB() {
               </div>
               <span className="text-2xl font-extrabold tracking-wide text-white">Kumanima</span>
             </div>
-            {/* Menú principal con animaciones y sección extra de Scraping */}
-            <nav className="flex flex-col gap-2 mt-6 px-4">
-              <Button variant={tabla === 'User' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('User')}><Home className="w-5 h-5 transition-all duration-200 group-hover:scale-110" /> Dashboard</Button>
-              <Button variant={tabla === 'Manga' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Manga')}><BookOpen className="w-5 h-5" /> Mangas</Button>
-              <Button variant={tabla === 'Account' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Account')}><Users className="w-5 h-5" /> Cuentas</Button>
-              <Button variant={tabla === 'Session' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Session')}><Database className="w-5 h-5" /> Sesiones</Button>
-              <Button variant={tabla === 'Genre' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Genre')}><Layers className="w-5 h-5" /> Géneros</Button>
+            {/* Menú principal dinámico con todas las tablas agrupadas en un Collapsible simple */}
+            <div>
+              <Button variant="ghost" className="w-full justify-between text-base font-semibold group" onClick={() => setDbOpen((v) => !v)}>
+                <span className="flex items-center gap-2">
+                  <Database className="w-5 h-5" />
+                  Bases de datos
+                </span>
+                <span
+                  className={`ml-2 inline-block transition-transform duration-300 ${dbOpen ? 'rotate-90' : 'rotate-0'}`}
+                  style={{ transition: 'transform 0.3s' }}
+                >
+                  ▶
+                </span>
+              </Button>
+              <div
+                className="overflow-hidden relative"
+                style={{
+                  maxHeight: dbOpen ? 1000 : 0,
+                  opacity: dbOpen ? 1 : 0,
+                  transition: 'max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s',
+                }}
+              >
+                {/* Línea vertical solo en el contenedor, alineada con el icono */}
+                <div className="absolute left-7 top-0 bottom-0 w-px bg-[#39393f]" />
+                <nav
+                  className="flex flex-col gap-2 mt-2 px-2 w-full"
+                  style={{
+                    maxHeight: 400,
+                    overflowY: 'auto',
+                    scrollbarWidth: 'none', // Firefox
+                  }}
+                >
+                  <style>{`
+                    nav::-webkit-scrollbar { display: none; }
+                  `}</style>
+                  {tablas.map((nombre) => (
+                    <Button
+                      key={nombre}
+                      variant={tabla === nombre ? 'secondary' : 'ghost'}
+                      className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10"
+                      onClick={() => setTabla(nombre)}
+                      style={{ marginLeft: 28, maxWidth: '100%' }}
+                    >
+                      {nombre}
+                    </Button>
+                  ))}
+                </nav>
+              </div>
+            </div>
               {/* Sección visual extra para Scraping */}
               <div className="relative group mb-2">
                 <Button
@@ -496,20 +584,60 @@ export default function AdminUniversalDB() {
               <Button variant={tabla === 'Settings' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Settings')}><Settings className="w-5 h-5" /> Settings</Button>
               <Button variant={tabla === 'Help' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Help')}><LifeBuoy className="w-5 h-5" /> Get Help</Button>
               <Button variant={tabla === 'Search' ? 'secondary' : 'ghost'} className="w-full justify-start gap-3 text-base transition-all duration-200 hover:scale-[1.03] hover:bg-primary/10" onClick={() => setTabla('Search')}><Search className="w-5 h-5" /> Search</Button>
-            </nav>
           </div>
           {/* Usuario y versión abajo */}
-          <div className="px-6 pb-8 border-t border-[#23232b] mt-6 flex items-center gap-3 bg-[#101012]">
+          <div className="px-6 pb-8 border-t border-[#23232b] mt-6 bg-[#101012]">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-3 rounded-xl px-4 py-3 bg-[#23232b] border border-[#23232b] shadow-none mt-2 transition-colors focus:outline-none">
+                  {session?.user?.image ? (
+                    <Image src={session.user.image} alt={session.user.name || 'Avatar'} width={40} height={40} className="h-10 w-10 rounded-full object-cover border border-[#39393f]" />
+                  ) : (
+                    <Avatar className="h-10 w-10 border border-[#39393f]">{session?.user?.name?.[0] || 'U'}</Avatar>
+                  )}
+                  <div className="flex flex-col items-start flex-1 min-w-0">
+                    <span className="text-base font-semibold text-white truncate max-w-[120px]">{session?.user?.name || 'Usuario'}</span>
+                    <span className="text-xs text-[#a1a1aa] truncate max-w-[120px]">{session?.user?.email || ''}</span>
+                  </div>
+                  <svg className="w-5 h-5 text-[#a1a1aa]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" side="right" className="w-72 p-0 mt-0 bg-[#18181b] border border-[#23232b] rounded-xl shadow-none">
+                {/* Bloque usuario compacto */}
+                <div className="flex items-center gap-3 px-4 py-4 border-b border-[#23232b] bg-[#18181b]">
             {session?.user?.image ? (
-              <Image src={session.user.image} alt={session.user.name || 'Avatar'} width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
-            ) : (
-              <Avatar className="h-10 w-10">{session?.user?.name?.[0] || 'U'}</Avatar>
-            )}
-            <div>
-              <div className="text-base font-semibold text-white">{session?.user?.name || 'Usuario'}</div>
-              <div className="text-xs text-muted-foreground">{session?.user?.email || ''}</div>
-              <span className="text-xs text-muted-foreground">v0.0.1</span>
+                    <Image src={session.user.image} alt={session.user.name || 'Avatar'} width={36} height={36} className="h-9 w-9 rounded-full object-cover border border-[#39393f]" />
+                  ) : (
+                    <Avatar className="h-9 w-9 border border-[#39393f]">{session?.user?.name?.[0] || 'U'}</Avatar>
+                  )}
+                  <div className="flex flex-col items-start min-w-0">
+                    <div className="font-semibold text-white text-base leading-tight truncate max-w-[150px]">{session?.user?.name || 'Usuario'}</div>
+                    <div className="text-xs text-[#a1a1aa] leading-tight truncate max-w-[150px]">{session?.user?.email || ''}</div>
+                  </div>
             </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="flex gap-3 px-6 py-3 text-base text-white hover:bg-[#23232b] focus:bg-[#23232b] transition-colors">
+                    <Settings className="w-5 h-5 text-[#a1a1aa]" />
+                    <span>Account</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex gap-3 px-6 py-3 text-base text-white hover:bg-[#23232b] focus:bg-[#23232b] transition-colors">
+                    <FileText className="w-5 h-5 text-[#a1a1aa]" />
+                    <span>Billing</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex gap-3 px-6 py-3 text-base text-white hover:bg-[#23232b] focus:bg-[#23232b] transition-colors">
+                    <MessageCircle className="w-5 h-5 text-[#a1a1aa]" />
+                    <span>Notifications</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="flex gap-3 px-6 py-3 text-base text-red-500 hover:bg-[#23232b] focus:bg-[#23232b] transition-colors" onClick={() => signOut()}>
+                  <LogOut className="w-5 h-5" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="mt-2 text-xs text-muted-foreground text-center">v0.0.1</div>
           </div>
         </aside>
         {/* Pantalla derecha con scroll y estilo profesional */}
@@ -576,6 +704,8 @@ export default function AdminUniversalDB() {
                     page={page}
                     totalPages={totalPages}
                     onPageChange={setPage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={setRowsPerPage}
                     loading={loading}
                   />
                 </CardContent>

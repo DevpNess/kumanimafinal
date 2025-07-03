@@ -14,9 +14,14 @@ import { Label } from "@/components/ui/label"
 import { useForm } from "react-hook-form"
 import {signIn} from "next-auth/react"
 import {useRouter} from "next/navigation"
+import { FaGoogle } from 'react-icons/fa'
+import { useState } from 'react'
+import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 export default function DialogLogin(props: { children: React.ReactNode }) {
   const router = useRouter();
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState('');
   const onSubmit = handleSubmit(async (data) => {
 
     
@@ -32,6 +37,21 @@ export default function DialogLogin(props: { children: React.ReactNode }) {
       router.refresh()
     }
   })
+
+  const handleGoogleLogin = async () => {
+    setGoogleError('');
+    setGoogleLoading(true);
+    try {
+      const res = await signIn('google', { redirect: false });
+      if (res?.error) {
+        setGoogleError('Error al iniciar sesión con Google. Intenta nuevamente.');
+      }
+    } catch (e) {
+      setGoogleError('Error inesperado con Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
 
   return (
     <Dialog>
@@ -74,11 +94,26 @@ export default function DialogLogin(props: { children: React.ReactNode }) {
             </div>
           </div>
 
-
           <DialogFooter>
             <Button type="submit">Continuar</Button>
           </DialogFooter>
         </form>
+        {/* Botón de Google debajo del formulario */}
+        <div className="flex flex-col gap-2 mt-4">
+          <span className="text-center text-sm text-muted-foreground mb-1">O inicia sesión con</span>
+          <Button
+            type="button"
+            variant="outline"
+            className={`w-full flex items-center gap-2 justify-center border border-gray-300 hover:bg-gray-100 font-semibold shadow-sm transition-all ${googleLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+            style={{ background: 'white', color: '#222' }}
+          >
+            {googleLoading ? <AiOutlineLoading3Quarters className="animate-spin text-lg text-red-500" /> : <FaGoogle className="text-lg text-red-500" />}
+            {googleLoading ? 'Conectando...' : 'Iniciar sesión con Google'}
+          </Button>
+          {googleError && <span className="text-center text-xs text-red-500 mt-1">{googleError}</span>}
+        </div>
       </DialogContent>
     </Dialog>
   )

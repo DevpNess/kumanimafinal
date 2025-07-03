@@ -100,7 +100,7 @@ export default function ButtonAuth() {
             Inicio de Sesión
           </DialogTitle>
           <DialogDescription>
-            Completa la información para ingresar.
+            Completa la información para ingresar.2
           </DialogDescription>
         </DialogHeader>
         <form action="" onSubmit={onSubmitLogin}>

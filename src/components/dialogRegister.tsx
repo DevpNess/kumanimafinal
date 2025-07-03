@@ -13,6 +13,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { FaGoogle } from 'react-icons/fa'
+import { useState } from 'react'
+import { AiOutlineLoading3Quarters } from 'react-icons/ai'
+import { signIn } from "next-auth/react";
 
 export default function DialogLogin(props: { children: React.ReactNode }) {
     const {
@@ -21,6 +25,8 @@ export default function DialogLogin(props: { children: React.ReactNode }) {
         formState: { errors },
     } = useForm();
     const router = useRouter();
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [googleError, setGoogleError] = useState('');
 
     const onSubmit = handleSubmit(async (data) => {
         if (data.password !== data.confirmPassword) {
@@ -47,6 +53,21 @@ export default function DialogLogin(props: { children: React.ReactNode }) {
             alert('Registrado')
         }
     });
+
+    const handleGoogleRegister = async () => {
+        setGoogleError('');
+        setGoogleLoading(true);
+        try {
+            const res = await signIn('google', { redirect: false });
+            if (res?.error) {
+                setGoogleError('Error al registrarse con Google. Intenta nuevamente.');
+            }
+        } catch (e) {
+            setGoogleError('Error inesperado con Google.');
+        } finally {
+            setGoogleLoading(false);
+        }
+    }
 
     console.log(errors);
 
@@ -175,6 +196,21 @@ export default function DialogLogin(props: { children: React.ReactNode }) {
                                 ) : <span className="text-red-500">error</span>
                             )}
                         </div>
+                    </div>
+                    <div className="flex flex-col gap-2 mb-2">
+                        <span className="text-center text-sm text-muted-foreground mb-1">O regístrate con</span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={`w-full flex items-center gap-2 justify-center border border-gray-300 hover:bg-gray-100 font-semibold shadow-sm transition-all ${googleLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            onClick={handleGoogleRegister}
+                            disabled={googleLoading}
+                            style={{ background: 'white', color: '#222' }}
+                        >
+                            {googleLoading ? <AiOutlineLoading3Quarters className="animate-spin text-lg text-red-500" /> : <FaGoogle className="text-lg text-red-500" />}
+                            {googleLoading ? 'Conectando...' : 'Registrarse con Google'}
+                        </Button>
+                        {googleError && <span className="text-center text-xs text-red-500 mt-1">{googleError}</span>}
                     </div>
                     <DialogFooter>
                         <Button type="submit">Registrarme</Button>

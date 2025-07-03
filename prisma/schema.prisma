@@ -29,6 +29,31 @@ model User {
   ratings       RatingManga[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+
+  // =============================
+  // MÉTRICAS Y ANALÍTICA AVANZADA
+  // =============================
+
+  /// Sesiones de usuario (tráfico)
+  sesiones      Sesion[]
+  /// Páginas vistas (tráfico)
+  paginasVista  PaginaVista[]
+  /// Eventos personalizados (engagement, interacción)
+  eventos       Evento[]
+  /// Errores técnicos (métricas técnicas)
+  erroresTecnicos ErrorTecnico[]
+  /// Tiempos de carga de página (métricas técnicas)
+  tiemposCarga  TiempoCarga[]
+  /// Vistas de manga (contenido)
+  mangaViews    MangaView[]
+  /// Ratings de manga (contenido, engagement)
+  mangaRatings  MangaRating[]
+  /// Comentarios de manga (contenido, engagement)
+  mangaComentarios MangaComentario[]
+  /// Favoritos de manga (engagement, muchos a muchos)
+  mangaFavoritos MangaFavorito[]
+  /// Compartidos de manga (engagement, muchos a muchos)
+  mangaCompartidos MangaCompartido[]
 }
 
 model Account {
@@ -117,6 +142,21 @@ model Manga {
   releaseDate    DateTime        @default(now())
   updateLast     DateTime        @updatedAt
   updateNext     DateTime?
+
+  // =============================
+  // MÉTRICAS Y ANALÍTICA AVANZADA
+  // =============================
+
+  /// Vistas de manga (contenido)
+  mangaViews    MangaView[]
+  /// Ratings de manga (contenido, engagement)
+  mangaRatings  MangaRating[]
+  /// Comentarios de manga (contenido, engagement)
+  mangaComentarios MangaComentario[]
+  /// Favoritos de manga (engagement, muchos a muchos)
+  mangaFavoritos MangaFavorito[]
+  /// Compartidos de manga (engagement, muchos a muchos)
+  mangaCompartidos MangaCompartido[]
 }
 
 model StatusManga {
@@ -254,4 +294,121 @@ model PageStats {
   growthRate    Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+/// Sesiones de usuario (tráfico)
+model Sesion {
+  id         Int      @id @default(autoincrement())
+  usuario    User?    @relation(fields: [usuarioId], references: [id])
+  usuarioId  String?
+  ip         String
+  userAgent  String
+  inicio     DateTime @default(now())
+  fin        DateTime?
+  paginas    PaginaVista[]
+}
+
+/// Páginas vistas (tráfico)
+model PaginaVista {
+  id         Int      @id @default(autoincrement())
+  sesion     Sesion   @relation(fields: [sesionId], references: [id])
+  sesionId   Int
+  url        String
+  referrer   String?
+  timestamp  DateTime @default(now())
+  eventos    Evento[]
+  // Relación con usuario
+  usuario    User?    @relation(fields: [usuarioId], references: [id])
+  usuarioId  String?
+}
+
+/// Eventos personalizados (engagement, interacción)
+model Evento {
+  id            Int         @id @default(autoincrement())
+  paginaVista   PaginaVista @relation(fields: [paginaVistaId], references: [id])
+  paginaVistaId Int
+  tipo          String      // ejemplo: 'click', 'scroll', 'compartir', etc.
+  descripcion   String?
+  timestamp     DateTime    @default(now())
+  // Relación con usuario
+  usuario    User?    @relation(fields: [usuarioId], references: [id])
+  usuarioId  String?
+}
+
+/// Errores técnicos (métricas técnicas)
+model ErrorTecnico {
+  id         Int      @id @default(autoincrement())
+  usuario    User?    @relation(fields: [usuarioId], references: [id])
+  usuarioId  String?
+  mensaje    String
+  url        String?
+  stack      String?
+  timestamp  DateTime @default(now())
+}
+
+/// Tiempos de carga de página (métricas técnicas)
+model TiempoCarga {
+  id         Int      @id @default(autoincrement())
+  url        String
+  duracionMs Int
+  usuario    User?    @relation(fields: [usuarioId], references: [id])
+  usuarioId  String?
+  timestamp  DateTime @default(now())
+}
+
+/// Vistas de manga (contenido)
+model MangaView {
+  id         Int      @id @default(autoincrement())
+  manga      Manga    @relation(fields: [mangaId], references: [id])
+  mangaId    Int
+  usuario    User?    @relation(fields: [usuarioId], references: [id])
+  usuarioId  String?
+  timestamp  DateTime @default(now())
+}
+
+/// Ratings de manga (contenido, engagement)
+model MangaRating {
+  id         Int      @id @default(autoincrement())
+  manga      Manga    @relation(fields: [mangaId], references: [id])
+  mangaId    Int
+  usuario    User     @relation(fields: [usuarioId], references: [id])
+  usuarioId  String
+  puntuacion Int      // 1-5 estrellas
+  timestamp  DateTime @default(now())
+
+  @@unique([mangaId, usuarioId])
+}
+
+/// Comentarios de manga (contenido, engagement)
+model MangaComentario {
+  id         Int      @id @default(autoincrement())
+  manga      Manga    @relation(fields: [mangaId], references: [id])
+  mangaId    Int
+  usuario    User     @relation(fields: [usuarioId], references: [id])
+  usuarioId  String
+  comentario String
+  timestamp  DateTime @default(now())
+}
+
+/// Favoritos de manga (engagement, muchos a muchos)
+model MangaFavorito {
+  id         Int      @id @default(autoincrement())
+  manga      Manga    @relation(fields: [mangaId], references: [id])
+  mangaId    Int
+  usuario    User     @relation(fields: [usuarioId], references: [id])
+  usuarioId  String
+  timestamp  DateTime @default(now())
+
+  @@unique([mangaId, usuarioId])
+}
+
+/// Compartidos de manga (engagement, muchos a muchos)
+model MangaCompartido {
+  id         Int      @id @default(autoincrement())
+  manga      Manga    @relation(fields: [mangaId], references: [id])
+  mangaId    Int
+  usuario    User     @relation(fields: [usuarioId], references: [id])
+  usuarioId  String
+  plataforma String   // ejemplo: 'twitter', 'facebook', 'whatsapp', etc.
+  timestamp  DateTime @default(now())
 }
