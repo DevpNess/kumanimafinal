@@ -7,7 +7,7 @@ function getModel(table: string) {
   const models = {
     User: prisma.user,
     Account: prisma.account,
-    Session: prisma.session,
+    Sesion: prisma.sesion,
     VerificationToken: prisma.verificationToken,
     Authenticator: prisma.authenticator,
     Manga: prisma.manga,
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
   if (table === 'VerificationToken') orderByField = 'identifier';
   if (table === 'GenreManga') orderByField = 'mangaId';
   if (table === 'RatingManga') orderByField = 'id';
-  if (table === 'Session') orderByField = 'sessionToken';
+  if (table === 'Sesion') orderByField = 'sessionToken';
   if (table === 'Account') orderByField = 'userId';
   if (table === 'MangaSeeLater' || table === 'MangaFavorite' || table === 'MangaLike') orderByField = 'id';
   if (table === 'Authenticator') orderByField = 'id';

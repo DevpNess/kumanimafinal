@@ -23,7 +23,7 @@ model User {
   favoritesManga MangaFavorite[]
 
   accounts      Account[]
-  sessions      Session[]
+  sessions      Sesion[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
   ratings       RatingManga[]
@@ -75,16 +75,6 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
-}
-
-model Session {
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -298,14 +288,19 @@ model PageStats {
 
 /// Sesiones de usuario (tráfico)
 model Sesion {
-  id         Int      @id @default(autoincrement())
-  usuario    User?    @relation(fields: [usuarioId], references: [id])
-  usuarioId  String?
-  ip         String
-  userAgent  String
-  inicio     DateTime @default(now())
-  fin        DateTime?
-  paginas    PaginaVista[]
+  id           Int      @id @default(autoincrement())
+  usuario      User?    @relation(fields: [usuarioId], references: [id])
+  usuarioId    String?
+  ip           String
+  userAgent    String
+  inicio       DateTime @default(now())
+  fin          DateTime?
+  paginas      PaginaVista[]
+  // Campos de Session de NextAuth
+  sessionToken String?   @unique
+  expires      DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 /// Páginas vistas (tráfico)

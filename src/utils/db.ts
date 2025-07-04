@@ -1,5 +1,5 @@
 ﻿import prisma from "@/lib/prisma"
-import { User, Account, Session, VerificationToken, Authenticator, Manga, StatusManga, TypeManga, AuthorManga, ScanManga, Genre, GenreManga, RatingManga, MangaLike, MangaSeeLater, MangaFavorite, MangaScraping } from "@prisma/client"
+import { User, Account, Sesion, VerificationToken, Authenticator, Manga, StatusManga, TypeManga, AuthorManga, ScanManga, Genre, GenreManga, RatingManga, MangaLike, MangaSeeLater, MangaFavorite, MangaScraping } from "@prisma/client"
 
 // =============================================
 // USERS

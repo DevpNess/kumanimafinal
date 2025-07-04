@@ -68,6 +68,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "next-auth/react"
+import { AnalyticsPanel } from './components/AnalyticsPanel';
+import UserAnalytics from './components/User/UserAnalytics';
+import AccountAnalytics from './components/Account/AccountAnalytics';
+import SesionAnalytics from './components/Sesion/SesionAnalytics';
+import SesionRegistros from './components/Sesion/SesionRegistros';
+import SesionConfiguracion from './components/Sesion/SesionConfiguracion';
 
 interface MangaSite {
   id: number;
@@ -153,7 +159,7 @@ const camposPorTabla: Record<string, { key: string, label: string }[]> = {
     { key: 'createdAt', label: 'Creado' },
     { key: 'updatedAt', label: 'Actualizado' },
   ],
-  Session: [
+  Sesion: [
     { key: 'sessionToken', label: 'SessionToken' },
     { key: 'userId', label: 'UserId' },
     { key: 'expires', label: 'Expires' },
@@ -678,44 +684,40 @@ export default function AdminUniversalDB() {
               <TabsTrigger value="config">Configuración</TabsTrigger>
             </TabsList>
             <TabsContent value="tabla">
-              <Card className="w-full rounded-2xl shadow-lg border border-[#282838]">
-                <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-primary mb-2">{tabla}</CardTitle>
-                  <div className="flex gap-2">
-                    <Button variant="outline">Columnas</Button>
-                    <Button onClick={() => setModalAgregarAbierto(true)} variant="default">Agregar registro</Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  {/* Tabs de categorías sobre la tabla */}
-                  <div className="flex items-center gap-2 mb-4 w-full max-w-6xl">
-                    {categorias.map(cat => (
-                      <Button key={cat.key} variant={categoria === cat.key ? 'secondary' : 'ghost'} onClick={() => setCategoria(cat.key)} className="flex items-center gap-2 text-sm px-4 py-2">
-                        {cat.label}
-                        <Badge variant="outline" className="ml-1 text-xs px-2 py-0.5">{cat.count}</Badge>
-                      </Button>
-                    ))}
-                  </div>
-                  <DataTable
-                    data={data}
-                    columns={columnsTanstack}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    page={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
-                    rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={setRowsPerPage}
-                    loading={loading}
-                  />
-                </CardContent>
-              </Card>
+              {tabla === 'Sesion' ? (
+                <SesionRegistros />
+              ) : (
+                <DataTable
+                  data={data}
+                  columns={columnsTanstack}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={setRowsPerPage}
+                  loading={loading}
+                />
+              )}
             </TabsContent>
             <TabsContent value="analytics">
-              <Card className="w-full rounded-2xl shadow-lg bg-[#23232b] border border-[#282838] p-8 text-white">Analytics de ejemplo aquí...</Card>
+              {tabla === 'User' ? (
+                <UserAnalytics />
+              ) : tabla === 'Account' ? (
+                <AccountAnalytics />
+              ) : tabla === 'Sesion' ? (
+                <SesionAnalytics />
+              ) : (
+                <AnalyticsPanel />
+              )}
             </TabsContent>
             <TabsContent value="config">
-              <Card className="w-full rounded-2xl shadow-lg bg-[#23232b] border border-[#282838] p-8 text-white">Configuración de ejemplo aquí...</Card>
+              {tabla === 'Sesion' ? (
+                <SesionConfiguracion />
+              ) : (
+                <Card className="w-full rounded-2xl shadow-lg bg-[#23232b] border border-[#282838] p-8 text-white">Configuración de ejemplo aquí...</Card>
+              )}
             </TabsContent>
           </Tabs>
           <ModalAgregarRegistro

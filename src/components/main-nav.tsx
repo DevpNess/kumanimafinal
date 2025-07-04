@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils"
 import  {Button} from "@/components/ui/button"
 import { ModeToggle } from "@/components/theme-button"
 import { Input } from "@/components/ui/input"
-import DialogRegister from "@/components/dialogRegister"
-import DialogLogin from "@/components/dialogLogin" 
 import ButtonAuth from "./ButtonAuth"
 import DialogSearch from "@/components/dialogSearch"
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
@@ -54,10 +52,4 @@ export default function MainNav() {
             </div>
         </div>
     )
-}
-
-/*
-    <DialogLogin>Inicio de sesión</DialogLogin>
-                    <DialogRegister>Registrarme</DialogRegister>
-                    <ModeToggle />
-*/ 
+} 

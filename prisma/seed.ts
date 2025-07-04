@@ -334,6 +334,28 @@ async function main() {
     })
   }
 
+  // =============================================
+  // CREAR SESIONES DE PRUEBA
+  // =============================================
+  console.log('🕒 Creando sesiones de prueba...')
+  for (const user of users) {
+    for (let i = 0; i < 5; i++) {
+      const inicio = new Date(Date.now() - Math.floor(Math.random() * 100000000));
+      const fin = new Date(inicio.getTime() + Math.floor(Math.random() * 2 * 60 * 60 * 1000)); // hasta 2h después
+      await prisma.sesion.create({
+        data: {
+          usuarioId: user.id,
+          ip: `192.168.1.${Math.floor(Math.random() * 255)}`,
+          userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${90 + Math.floor(Math.random() * 10)}.0.0.0 Safari/537.36`,
+          inicio,
+          fin,
+          sessionToken: `token-${user.id}-${i}`,
+          expires: new Date(fin.getTime() + 60 * 60 * 1000),
+        },
+      });
+    }
+  }
+
   await prisma.pageStats.createMany({
     data: [
       { date: new Date('2024-04-05'), totalRevenue: 1250, newCustomers: 1234, activeAccounts: 45678, growthRate: 4.5 },
